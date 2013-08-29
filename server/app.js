@@ -151,9 +151,7 @@ function StartGame(client) {
 		//Efter shuffle, sätt första spelaren;
 		_currentPlayer = _playingUsers[0];
 
-		//TODO: Skapa funktion för att skapa boarden.
-		_board = [['blank','blank','blank'],
-              ['blank','blank','blank']];
+		CreateBoard(_playingUsers.length);
 		
 		UpdateQuests();
 		
@@ -202,8 +200,8 @@ io.sockets.on('connection', function (client) {
 function transformBoard(data)
 {
    
-    var draw_x = data.x
-    var draw_y = data.y
+    var draw_x = data.y
+    var draw_y = data.x
     var draw_element = data.type;
 
     //denna läses upp ur nåt på servern
@@ -282,8 +280,6 @@ function getNewElement(draw_element, neighbor_element)
       return "ashes";
     if(neighbor_element == "stone")
       return "lava";
-
-    return "fire";
   }
 
   if(draw_element == "water")
@@ -304,8 +300,6 @@ function getNewElement(draw_element, neighbor_element)
       return "ashes";
     if(neighbor_element == "stone")
       return "moss";
-
-    return "grass";
   }
 
   if(draw_element == "stone")
@@ -316,8 +310,6 @@ function getNewElement(draw_element, neighbor_element)
       return "moss";
     if(neighbor_element == "fire")
       return "lava";
-
-    return "stone";
   }
 
   return neighbor_element;
@@ -333,6 +325,46 @@ function isGameOver() {
   }
 
   return true;
+}
+
+function CreateBoard(numberOfPlayers) {
+  console.log("creating board");
+
+  var rows = 5;
+  var cols = 5;
+
+  if(numberOfPlayers == 3) {
+    rows = 9;
+    cols = 10;
+  }
+  else if(numberOfPlayers == 4) {
+    rows = 10;
+    cols = 12;
+  }
+  else if(numberOfPlayers == 5) {
+    rows = 10;
+    cols = 15;
+  }
+  else if(numberOfPlayers == 6) {
+    rows = 12;
+    cols = 15;
+  }
+  else if(numberOfPlayers == 7) {
+    rows = 14;
+    cols = 15;
+  }
+
+  _board = [];
+
+  for(var x = 0; x < rows; x++) {
+    _board[x] = [];
+
+    for(var y = 0; y < cols; y++) {
+      _board[x][y] = "blank";
+    }
+  }
+
+  console.log("board:", _board);
 }
 		
 		
