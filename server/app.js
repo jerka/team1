@@ -44,12 +44,21 @@ app.get('/assets/water.png', function (req, res) {
 });
 
 app.get('/assets/grass.png', function (req, res) {
-  res.sendfile(__dirname + '/assets/grass.png');
+    res.sendfile(__dirname + '/assets/grass.png');
 });
-
 app.get('/assets/lava.png', function (req, res) {
     res.sendfile(__dirname + '/assets/lava.png');
 });
+app.get('/assets/moss.png', function (req, res) {
+    res.sendfile(__dirname + '/assets/moss.png');
+});
+app.get('/assets/ashes.png', function (req, res) {
+    res.sendfile(__dirname + '/assets/ashes.png');
+});
+app.get('/assets/steam.png', function (req, res) {
+    res.sendfile(__dirname + '/assets/steam.png');
+});
+  
 
   app.get('/assets/night_back.jpg', function (req, res) {
   res.sendfile(__dirname + '/assets/night_back.jpg');
@@ -376,8 +385,8 @@ function CreateBoard(numberOfPlayers) {
     cols = 10;
   }
   else if(numberOfPlayers == 4) {
-    rows = 10;
-    cols = 12;
+    rows = 4;
+    cols = 5;
   }
   else if(numberOfPlayers == 5) {
     rows = 10;
