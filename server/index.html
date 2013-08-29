@@ -9,23 +9,23 @@
         list-style-type: none;
         display: table-cell;
         border: 1px solid #ccc;
-        width: 100px;
-        height: 100px;
+        width: 80px;
+        height: 80px;
       }
 
       td {
         border: 1px solid #ccc;
-        width: 100px;
-        height: 100px;
+        width: 80px;
+        height: 80px;
       }
     </style>
 
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="socket.io/socket.io.js"></script>
 
-    <script src="grid.js"></script>
+    <script src="./grid.js"></script>
 
     <script type="text/javascript">
       var Game = {
@@ -187,12 +187,14 @@
 
 
     <h3>Connected Players</h3>
-    <ul id="ul-players">
+    <ul id="ul-players"> 
     </ul>
 
     <ul id="elements">
-      <li data-type="water">Water</li>
-      <li data-type="stone">Stone</li>
+      <li data-type="water" style="background:url('./assets/Water.png')">Water</li>
+      <li data-type="stone" style="background:url('./assets/stone.png')">Stone</li>
+      <li data-type="fire" style="background:url('./assets/Fire.png')">Fire</li>
+      <li data-type="grass" style="background:url('./assets/grass.png')">Grass</li>
     </ul>
 
     <div id="grid">
