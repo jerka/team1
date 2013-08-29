@@ -1,59 +1,204 @@
 <html>
   <head>
-    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      var socket = io.connect('http://localhost:8080');
-
-      var reference_id = null;
-
-      // Called when client is connected to server
-      socket.on('connect', function () {
-
-        // Called when client receives message from server
-        socket.on('message', function (data) {
-          // Log to browser console
-          console.log(data);
-          
-          $('#world').html($('#world').html() + data.type);
-        });
-      });
-      
-      function send_message () {
-
-        var type = $('#type');
-        var position = $('input:checked').val();
-
-        // Send the message to the server
-        socket.emit('message', {  type: type.val(), reference_id: reference_id, position: position });
-
-        // Clear the input
-        type.val('');
-
-        return false;
+    <style type="text/css">
+      ul {
+        padding: 0;
       }
 
-      $(document).ready(function() {
-        $('#world div').on('click', function () {
-          reference_id = $(this).attr('id');
-        });
+      #elements li {
+        list-style-type: none;
+        display: table-cell;
+        border: 1px solid #ccc;
+        width: 100px;
+        height: 100px;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        width: 100px;
+        height: 100px;
+      }
+    </style>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="grid.js"></script>
+
+    <script type="text/javascript">
+      var Game = {
+        Socket: null,
+        World: null,
+
+        Init: function () {
+          console.log('init');
+
+          this.Socket = io.connect('http://localhost:8080');
+
+          this.Socket.on('connect', function () {
+  
+            Game.Socket.on('message', function (data) {
+             alert(data.message);
+            });
+            
+            Game.Socket.on('join', function (data) {
+                var li = document.createElement('li');
+              li.innerHTML =  data.user.userName;
+              document.getElementById('ul-players').appendChild(li);
+            });
+            
+            Game.Socket.on('init', function (data) {
+              var connectedUsers = data.usersOnline;
+              if(connectedUsers.length > 0) {
+                for (var i = 0; i < connectedUsers.length; i++) {
+                  var li = document.createElement('li');
+                  li.innerHTML = connectedUsers[i].userName;
+                  document.getElementById('ul-players').appendChild(li);
+                }
+          
+              
+              }
+            });
+            
+            Game.Socket.on('yourTurn', function (data) {
+              $("#next").show();
+              alert("Your turn");
+            });
+            Game.Socket.on('gameOver', function (data) {
+              var users = data.users;
+            
+                for (var i = 0; i < users.length; i++) {
+                  var li = document.createElement('li');
+                  li.innerHTML = users[i].points + " - " + users[i].userName;
+                  document.getElementById('ul-highscore').appendChild(li);
+              
+          
+              
+              }
+            });
+            Game.Socket.on('startGame', function (data) {
+              $("#start-game").remove();
+              alert("Game started");
+
+              Game.World = data.board;
+              Game.Update();
+            });
+            
+            
+            
+            Game.Socket.on('assignQuest', function (data) {
+              $("#quest-container").show();
+              $("#user-quest").html(data.quest);
+            });
+
+            Game.Socket.on('updateBoard', function (data) {
+              Game.World = data.board;
+
+              Game.Update();
+            });
+
+          });
+        },
+
+        SetupEvents: function () {
+          $('#elements li').draggable({ 
+              scroll: true,
+              cursor: 'move', 
+              cursorAt: { top: 50, left: 50 },
+              snap: '#grid td',
+              revert: false,
+              helper: 'clone'
+          });
+
+          $('#grid td.blank').droppable({
+            drop: function(event, ui) {
+              var cell = $(this);
+
+              var y = cell.index();
+              var x = cell.parents('tr').index();
+              var type = ui.draggable.attr('data-type');
+
+              cell.text(ui.draggable.text());
+
+              Game.SendDraw(x, y, type);
+            }
+          });
+        },
+
+        SendDraw: function (x, y, type) {
+          console.log('sending draw, x: ' + x + ', y: ' + y + ', type: ' + type);
+
+          this.World[x][y] = type;
+          Game.Socket.emit('finishedMove', { x: x, y: y, type: type });
+
+          this.Update();
+        },
+
+        Update: function () {
+          Grid.Render(this.World);
+          this.SetupEvents();
+        }
+      };
+
+      $(function() {
+        Game.Init();
+
+        $("#join-game").click(function () {
+    
+      var userName = document.getElementById('username');
+      Game.Socket.emit('join', { userName: userName.value });
+      $("#join-container").hide();
+      
+    });
+    
+    $("#start-game").click(function(){
+      Game.Socket.emit('startGame', { });
+    });
+    
+    $("#next").click(function(){
+      
+      $("#next").hide();
+    });
       });
     </script>
   </head>
   <body>
-    <form onsubmit="return send_message();" action="">
+    <div id="join-container">
+      <input type="text" id="username" placeholder="Username" /> 
+      <a href="javascript:void(0)" id="join-game">Join Game</a>
+      </div>
+    <br />
+    <br />
 
-      <input type="text" id="type" placeholder="Type" />
-      <input type="radio" name="position" value="0" />
-      <input type="radio" name="position" value="1" />
-      <input type="radio" name="position" value="2" />
-      <input type="radio" name="position" value="3" />
-      <input type="submit" value="Send" />
+    <a href="#" id="start-game">Start Game</a>
+    <a href="#" id="next" style="display:none">Next</a>
 
-    </form>
+    <div id="quest-container" style="display:none">
+    <h3>Your quest is to build as many <span id="user-quest"></span> as you can </h3>
+    </div>
 
-    <div id="world">
-      <div id="1" style="border:2px solid red; width:100px; height:100px"></div>
+
+    <div id="highscore-container">
+        <ul id="ul-highscore">
+        </ul>
+    </div>
+
+
+    <h3>Connected Players</h3>
+    <ul id="ul-players">
+    </ul>
+
+    <ul id="elements">
+      <li data-type="water">Water</li>
+      <li data-type="stone">Stone</li>
+    </ul>
+
+    <div id="grid">
+      <table>
+        <tbody></tbody>
+      </table>
     </div>
   </body>
 </html>
