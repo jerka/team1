@@ -1,11 +1,10 @@
 
 var Grid = 
 {
-	Rows : int,
-	Cols : int
-	CreateTile : function(_x,_y,_type)
-	{ 
-	  var tile = 
+  
+  CreateTile : function(_x,_y,_type)
+  { 
+    var tile = 
         {
           "x":_x,
           "y":_y,
@@ -13,20 +12,20 @@ var Grid =
         };
         return tile;
     
-	},
+  },
 
 
-	GetWorldFromServer : function()
-	{
-		return [
+  GetWorldFromServer : function()
+  {
+    return [
     ['Blank','Blank','Blank'],
     ['Blank','Blank','Blank'],
     ];
-	},
+  },
 
-	ConvertArrayToTileObjects : function()
-	{
-	var tiles = this.GetWorldFromServer();
+  ConvertArrayToTileObjects : function(board)
+  {
+  var tiles = board != null ? board : this.GetWorldFromServer();
     var tilesToObjects = new Array();
     for (var i=0; i<tiles.length; i++)
     {
@@ -41,9 +40,10 @@ var Grid =
       }
    }
   return tilesToObjects;
-	},	Render: function()
-	{
-		var t = this.ConvertArrayToTileObjects();
+  },  Render: function(board)
+  {
+     $("#grid table tbody").html("");
+    var t = this.ConvertArrayToTileObjects(board);
           for(var row=0; row<t.length; row++)
           {
             var tr = $('<tr></tr>')
@@ -52,13 +52,17 @@ var Grid =
             for(var col=0; col<t[row].length;col++)
               {
                   var obj = t[row][col];
-                 $(tr).append("<td>"+obj.type+"</td>");
+                 
+                 if(obj.type == "Blank")
+                    $(tr).append("<td class='blank'>"+obj.type+"</td>");
+                  else
+                    $(tr).append("<td>"+obj.type+"</td>");
              }
 
           }
-	},
+  },
 
 
 
 
-}
+};

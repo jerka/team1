@@ -1,59 +1,103 @@
 <html>
   <head>
-    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      var socket = io.connect('http://localhost:8080');
-
-      var reference_id = null;
-
-      // Called when client is connected to server
-      socket.on('connect', function () {
-
-        // Called when client receives message from server
-        socket.on('message', function (data) {
-          // Log to browser console
-          console.log(data);
-          
-          $('#world').html($('#world').html() + data.type);
-        });
-      });
-      
-      function send_message () {
-
-        var type = $('#type');
-        var position = $('input:checked').val();
-
-        // Send the message to the server
-        socket.emit('message', {  type: type.val(), reference_id: reference_id, position: position });
-
-        // Clear the input
-        type.val('');
-
-        return false;
+    <style type="text/css">
+      ul {
+        padding: 0;
       }
 
-      $(document).ready(function() {
-        $('#world div').on('click', function () {
-          reference_id = $(this).attr('id');
-        });
+      li {
+        list-style-type: none;
+        display: table-cell;
+        border: 1px solid #ccc;
+        width: 100px;
+        height: 100px;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        width: 100px;
+        height: 100px;
+      }
+    </style>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="grid.js"></script>
+
+    <script type="text/javascript">
+      var Game = {
+        Socket: null,
+        World: null,
+
+        Init: function () {
+          console.log('init');
+
+          this.Socket = io.connect('http://localhost:8080');
+
+          this.World = [['Blank','Blank','Blank'],
+                        ['Blank','Blank','Blank']];
+
+          this.Update();
+        },
+
+        SetupEvents: function () {
+          $('#elements li').draggable({ 
+              scroll: true,
+              cursor: 'move', 
+              cursorAt: { top: 50, left: 50 },
+              snap: '#grid td',
+              revert: false,
+              helper: 'clone'
+          });
+
+          $('#grid td.blank').droppable({
+            drop: function(event, ui) {
+              var cell = $(this);
+
+              var y = cell.index();
+              var x = cell.parents('tr').index();
+              var type = ui.draggable.attr('data-type');
+
+              cell.text(ui.draggable.text());
+
+              Game.SendDraw(x, y, type);
+            }
+          });
+        },
+
+        SendDraw: function (x, y, type) {
+          console.log('sending draw, x: ' + x + ', y: ' + y + ', type: ' + type);
+
+          this.World[x][y] = type;
+          this.Socket.emit('draw', { x: x, y: y, type: type });
+
+          this.Update();
+        },
+
+        Update: function () {
+          Grid.Render(this.World);
+          this.SetupEvents();
+        }
+      };
+
+      $(function() {
+        Game.Init();
       });
     </script>
   </head>
   <body>
-    <form onsubmit="return send_message();" action="">
+    <ul id="elements">
+      <li data-type="water">Water</li>
+      <li data-type="stone">Stone</li>
+    </ul>
 
-      <input type="text" id="type" placeholder="Type" />
-      <input type="radio" name="position" value="0" />
-      <input type="radio" name="position" value="1" />
-      <input type="radio" name="position" value="2" />
-      <input type="radio" name="position" value="3" />
-      <input type="submit" value="Send" />
-
-    </form>
-
-    <div id="world">
-      <div id="1" style="border:2px solid red; width:100px; height:100px"></div>
+    <div id="grid">
+      <table>
+        <tbody></tbody>
+      </table>
     </div>
   </body>
 </html>
