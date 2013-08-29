@@ -202,6 +202,7 @@ io.sockets.on('connection', function (client) {
 function transformBoard(data)
 {
    
+<<<<<<< Updated upstream
     var draw_x = data.x
     var draw_y = data.y
     var draw_element = data.type;
@@ -210,49 +211,73 @@ function transformBoard(data)
     var tiles = _board;
 
     console.log("Tiles: ", tiles);
+=======
+    var draw_x = 0;//data.x
+    var draw_y = 1;//data.y
+    var draw_element = data.type;
+
+    //denna läses upp ur nåt på servern
+    var tiles = [
+    ['sand','sand','blank'],
+    ['blank','blank','blank'],
+    //['grass','fire','blank'],
+    ];
+>>>>>>> Stashed changes
 
     //leta upp alla grannar
-    var left_neighbor = [draw_x-1, draw_y];
-    var right_neighbor = [draw_x+1, draw_y];
-    var top_neighbor = [draw_x, draw_y-1];
-    var bottom_neighbor = [draw_x, draw_y+1];
+    var left_neighbor = [draw_y, draw_x-1];
+    var right_neighbor = [draw_y, draw_x+1];
+    var top_neighbor = [draw_y-1, draw_x];
+    var bottom_neighbor = [draw_y+1, draw_x];
     
     var neighbors = [left_neighbor, right_neighbor, top_neighbor, bottom_neighbor];//array med grannarnas koordinater
-
+    console.log(neighbors);
     //kolla om någon ska ombildas
     //en ruta ska ombildas om den är ett grundämne
     var transformations = [];
     for (var i = 0; i < neighbors.length; i++) {
+
       n_x = neighbors[i][0];
       n_y = neighbors[i][1];
       
       if(tiles[n_x] && tiles[n_x][n_y])
       {
+<<<<<<< Updated upstream
         if(tiles[n_x][n_y] != "blank")
         {
         new_element = getNewElement(draw_element, tiles[n_x][n_y]);
         if(new_element != draw_element && transformations.indexOf(new_element) == -1)
             transformations.push(new_element);
         tiles[n_x][n_y] = new_element;
+=======
+        if(tiles[n_x][n_y] != "blank")//en granne som är blank ska aldrig påverkas
+        {
+          console.log("new elementar: ", draw_element,  tiles[n_x][n_y]);
+          new_element = getNewElement(draw_element, tiles[n_x][n_y]);
+          if(new_element != draw_element && new_element !=  tiles[n_x][n_y] && transformations.indexOf(new_element) == -1)
+            transformations.push(new_element);
+          tiles[n_x][n_y] = new_element;
+>>>>>>> Stashed changes
         }
       }
     }
  
     console.log(transformations.length);
+    console.log(transformations);
     //kolla om aktuell ruta ska ombildas eller tömmas
     //vi behöver veta vilka ombildningar som skett:
     //1. inga
     if(transformations.length == 0)
     {
       console.log("ingen trans!!!!")
-      tiles[draw_x][draw_y] = draw_element;
+      tiles[draw_y][draw_x] = draw_element;
     }
     //2. av en sort
     if(transformations.length == 1)
-      tiles[draw_x][draw_y] = transformations[0];
+      tiles[draw_y][draw_x] = transformations[0];
     //3. av flera sorter
     if(transformations.length > 1)
-      tiles[draw_x][draw_y] = "blank";
+      tiles[draw_y][draw_x] = "blank";
 
     console.log(data);
 
@@ -271,6 +296,7 @@ function transformBoard(data)
 
 function getNewElement(draw_element, neighbor_element)
 {
+
   if(draw_element == "fire")
   {
     if(neighbor_element == "water")
@@ -279,6 +305,8 @@ function getNewElement(draw_element, neighbor_element)
       return "ashes";
     if(neighbor_element == "stone")
       return "lava";
+
+    return "fire";
   }
 
   if(draw_element == "water")
@@ -299,6 +327,8 @@ function getNewElement(draw_element, neighbor_element)
       return "ashes";
     if(neighbor_element == "stone")
       return "moss";
+
+    return "grass";
   }
 
   if(draw_element == "stone")
@@ -309,12 +339,15 @@ function getNewElement(draw_element, neighbor_element)
       return "moss";
     if(neighbor_element == "fire")
       return "lava";
+
+    return "stone";
   }
 
   return neighbor_element;
 
 }
 
+<<<<<<< Updated upstream
 function isGameOver() {
   for(var x = 0; x < _board.length; x++) {
     for(var y = 0; y < _board[x].length; y++) {
@@ -327,4 +360,7 @@ function isGameOver() {
 }
 		
 		
+=======
+
+>>>>>>> Stashed changes
 	
