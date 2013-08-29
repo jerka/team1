@@ -56,7 +56,7 @@ var Grid =
                  if(obj.type == "blank")
                     $(tr).append("<td class='blank'>"+obj.type+"</td>");
                   else
-                    $(tr).append("<td>"+obj.type+"</td>");
+                    $(tr).append("<td style='width:80px;height:80px;background:url(\"assets/"+obj.type+".png\");''>"+obj.type+"</td>");
              }
 
           }

@@ -35,7 +35,7 @@
         Init: function () {
           console.log('init');
 
-          this.Socket = io.connect('http://localhost:8080');
+          this.Socket = io.connect('http://192.168.8.106:8080');
 
           this.Socket.on('connect', function () {
   
@@ -161,6 +161,16 @@
       
       $("#next").hide();
     });
+
+      var currentHours = new Date().getHours();
+
+  console.log(currentHours < 07 && currentHours > 18);
+  if(currentHours < 07 || currentHours > 18) {
+    $("body").attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center; ");
+  }
+  else {
+    $("body").attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center; ");
+  }
       });
     </script>
   </head>

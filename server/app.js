@@ -27,7 +27,7 @@ app.get('/assets/stone.png', function (req, res) {
   res.sendfile(__dirname + '/assets/stone.png');
 });
 
-app.get('/assets/flower.png', function (req, res) {
+app.get('/assets/flowers.png', function (req, res) {
   res.sendfile(__dirname + '/assets/flower.png');
 });
 
@@ -45,6 +45,18 @@ app.get('/assets/water.png', function (req, res) {
 
 app.get('/assets/grass.png', function (req, res) {
   res.sendfile(__dirname + '/assets/grass.png');
+});
+
+app.get('/assets/lava.png', function (req, res) {
+    res.sendfile(__dirname + '/assets/lava.png');
+});
+
+  app.get('/assets/night_back.jpg', function (req, res) {
+  res.sendfile(__dirname + '/assets/night_back.jpg');
+});
+
+app.get('/assets/day_back.jpg', function (req, res) {
+  res.sendfile(__dirname + '/assets/day_back.jpg');
 });
 
 
@@ -228,8 +240,8 @@ io.sockets.on('connection', function (client) {
 function transformBoard(data)
 {
    
-    var draw_x = data.y
-    var draw_y = data.x
+    var draw_x = data.x;
+    var draw_y = data.y;
     var draw_element = data.type;
 
     //denna läses upp ur nåt på servern
@@ -254,12 +266,13 @@ function transformBoard(data)
       
       if(tiles[n_x] && tiles[n_x][n_y])
       {
-        if(tiles[n_x][n_y] != "blank")
+        if(tiles[n_x][n_y] != "blank")//en granne som är blank ska aldrig påverkas
         {
-        new_element = getNewElement(draw_element, tiles[n_x][n_y]);
-        if(new_element != draw_element && transformations.indexOf(new_element) == -1)
+          console.log("new elementar: ", draw_element,  tiles[n_x][n_y]);
+          new_element = getNewElement(draw_element, tiles[n_x][n_y]);
+          if(new_element != draw_element && new_element !=  tiles[n_x][n_y] && transformations.indexOf(new_element) == -1)
             transformations.push(new_element);
-        tiles[n_x][n_y] = new_element;
+          tiles[n_x][n_y] = new_element;
         }
       }
     }
