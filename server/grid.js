@@ -18,8 +18,8 @@ var Grid =
   GetWorldFromServer : function()
   {
     return [
-    ['Blank','Blank','Blank'],
-    ['Blank','Blank','Blank'],
+    ['blank','blank','blank'],
+    ['blank','blank','blank'],
     ];
   },
 
@@ -53,7 +53,7 @@ var Grid =
               {
                   var obj = t[row][col];
                  
-                 if(obj.type == "Blank")
+                 if(obj.type == "blank")
                     $(tr).append("<td class='blank'>"+obj.type+"</td>");
                   else
                     $(tr).append("<td>"+obj.type+"</td>");

@@ -8,12 +8,15 @@ var fs = require('fs');
 // Start listening on port 8080
 server.listen(8080);
 
+
 // Serve the index.html file
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
 
-
+app.get('/grid.js', function (req, res) {
+  res.sendfile(__dirname + '/grid.js');
+});
 
 function LoadWorld() {
 
@@ -28,22 +31,30 @@ function LoadWorld() {
 
 }
 
-var connectedUsers = [];
-var turns = [];
+var _connectedUsers = [];
+var _playingUsers = [];
+var _quests = ["flowers", "ashes", "moss", "sand", "lava", "steam"];
 var _gameHasStarted = false;
 var _currentPlayer = null;
+var _board = null;
 
-function AddUserToServer(client) {
+
+function GetUserObject(id, userName) {
+	return { id: id, userName: userName, quest: null };
+}
+
+
+function AddUserToServer(client, userName) {
 	//TODO: client is changed on page reload
-	var userName = client.id;
+	var user = GetUserObject(client.id, userName);
 	
-	if(connectedUsers.indexOf(userName) > -1) {
-		console.log("User exists", userName);
+	if(_connectedUsers.indexOf(user) > -1) {
+		console.log("User exists", user);
 	}
 	else {
-		connectedUsers.push(userName);
-		console.log("Added user", connectedUsers);
-		io.sockets.emit('join', {user: userName});
+		_connectedUsers.push(user);
+		console.log("Added user", _connectedUsers);
+		io.sockets.emit('join', {user: user});
 	}
 }
 
@@ -59,31 +70,51 @@ function Init(client) {
 		client.disconnect();
 	}
 	else {
-		  io.sockets.socket(client.id).emit( "init", { usersOnline: connectedUsers });
+		  io.sockets.socket(client.id).emit( "init", { usersOnline: _connectedUsers });
 	}
 }
 
-function FinishMove(client) {
+function FinishMove(client, data) {
 
-		var requestingUser = client.id;
-		console.log("requestingUser",requestingUser);
+		var requestingUserId = client.id;
+		console.log("requestingUser",requestingUserId);
 		console.log("_currentPlayer",_currentPlayer);
 		//Check that it is the correct player who clicked 
-		if(_currentPlayer == requestingUser)
+		if(_currentPlayer.id == requestingUserId)
 		{
-			var currentIndex = turns.indexOf(_currentPlayer);
+			var currentIndex = _playingUsers.indexOf(_currentPlayer);
 			console.log("CurrentIndex", currentIndex);
-			if(currentIndex == turns.length - 1) {
-				_currentPlayer = turns[0];
+			if(currentIndex == _playingUsers.length - 1) {
+				_currentPlayer = _playingUsers[0];
 			}
 			else {
-				_currentPlayer = turns[currentIndex+1];
+				_currentPlayer = _playingUsers[currentIndex+1];
 			}
-			 io.sockets.socket(_currentPlayer).emit("yourTurn",{message:'Your turn'});
+			//Todo: Uppdatera spelbärdan här
+
+      transformBoard(data);
+
+			io.sockets.emit('updateBoard', {board: _board });
+			 io.sockets.socket(_currentPlayer.id).emit("yourTurn",{message:'Your turn'});
 		}
-		else {
-			   io.sockets.socket(requestingUser).emit("message",{message:'Wait for your turn'});
+		else {	
+			   io.sockets.socket(requestingUserId).emit("message",{message:'Wait for your turn'});
 		}
+}
+
+function UpdateQuests() {
+	
+	var shuffledQuests = shuffle(_quests);
+	
+	//Assign a quest to each player
+	for(var i = 0; i < _playingUsers.length;i++) {
+		_playingUsers[i].quest = shuffledQuests[i];
+	}
+	
+	//Send a the quest to each player so they can see which quest they are going for
+	for(var i = 0; i < _playingUsers.length;i++) {
+		io.sockets.socket(_playingUsers[i].id).emit("assignQuest",{quest: _playingUsers[i].quest});
+	}
 }
 
 function StartGame(client) {
@@ -91,14 +122,20 @@ function StartGame(client) {
 		_gameHasStarted = true;
 		console.log("Game has started", _gameHasStarted);
 		
-		turns = shuffle(connectedUsers);
-		console.log(turns);
+		_playingUsers = shuffle(_connectedUsers);
+		console.log(_playingUsers);
 		
 		//Efter shuffle, sätt första spelaren;
-		_currentPlayer = turns[0];
+		_currentPlayer = _playingUsers[0];
+
+		//TODO: Skapa funktion för att skapa boarden.
+		_board = [['blank','blank','blank'],
+              ['blank','blank','blank']];
 		
-		io.sockets.emit('startGame', {});
-		io.sockets.socket(_currentPlayer).emit("yourTurn",{message:'Your turn'});
+		UpdateQuests();
+		
+		io.sockets.emit('startGame', {message: "Game started", board: _board});
+		io.sockets.socket(_currentPlayer.id).emit("yourTurn",{message:'Your turn'});
 	}
 }
 
@@ -108,11 +145,11 @@ io.sockets.on('connection', function (client) {
 	Init(client);
 		
 	client.on('join', function (data) {
-		AddUserToServer(client);
+		AddUserToServer(client,data.userName);
 	});
 	
 	client.on('finishedMove', function (data) {
-		FinishMove(client);
+		FinishMove(client, data);
 	});
 	
 	client.on('startGame', function (data) {
@@ -142,16 +179,14 @@ io.sockets.on('connection', function (client) {
 function transformBoard(data)
 {
    
-    var draw_x = 1;//data.x
-    var draw_y = 1;//data.y
+    var draw_x = data.x
+    var draw_y = data.y
     var draw_element = data.type;
 
     //denna läses upp ur nåt på servern
-    var tiles = [
-    ['blank','fire','grass'],
-    ['grass','blank','water'],
-    ['water','grass','sand'], 
-    ];
+    var tiles = _board;
+
+    console.log("Tiles: ", tiles);
 
     //leta upp alla grannar
     var left_neighbor = [draw_x-1, draw_y];
@@ -170,10 +205,13 @@ function transformBoard(data)
       
       if(tiles[n_x] && tiles[n_x][n_y])
       {
+        if(tiles[n_x][n_y] != "blank")
+        {
         new_element = getNewElement(draw_element, tiles[n_x][n_y]);
         if(new_element != draw_element && transformations.indexOf(new_element) == -1)
             transformations.push(new_element);
         tiles[n_x][n_y] = new_element;
+        }
       }
     }
  
@@ -201,8 +239,11 @@ function transformBoard(data)
     }
     
     // Sends a message to all connected clients
-    io.sockets.emit('transformBoard', data);
+    //io.sockets.emit('transformBoard', data);
 
+    console.log("After transform", tiles);
+
+    _board = tiles;
 }
 
 function getNewElement(draw_element, neighbor_element)
@@ -250,7 +291,6 @@ function getNewElement(draw_element, neighbor_element)
   return neighbor_element;
 
 }
-
 		
 		
 	

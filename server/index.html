@@ -5,7 +5,7 @@
         padding: 0;
       }
 
-      li {
+      #elements li {
         list-style-type: none;
         display: table-cell;
         border: 1px solid #ccc;
@@ -37,10 +37,57 @@
 
           this.Socket = io.connect('http://localhost:8080');
 
-          this.World = [['Blank','Blank','Blank'],
-                        ['Blank','Blank','Blank']];
+          this.Socket.on('connect', function () {
+  
+            Game.Socket.on('message', function (data) {
+             alert(data.message);
+            });
+            
+            Game.Socket.on('join', function (data) {
+                var li = document.createElement('li');
+              li.innerHTML =  data.user.userName;
+              document.getElementById('ul-players').appendChild(li);
+            });
+            
+            Game.Socket.on('init', function (data) {
+              var connectedUsers = data.usersOnline;
+              if(connectedUsers.length > 0) {
+                for (var i = 0; i < connectedUsers.length; i++) {
+                  var li = document.createElement('li');
+                  li.innerHTML = connectedUsers[i].userName;
+                  document.getElementById('ul-players').appendChild(li);
+                }
+          
+              
+              }
+            });
+            
+            Game.Socket.on('yourTurn', function (data) {
+              $("#next").show();
+              alert("Your turn");
+            });
+            Game.Socket.on('startGame', function (data) {
+              $("#start-game").remove();
+              alert("Game started");
 
-          this.Update();
+              Game.World = data.board;
+              Game.Update();
+            });
+            
+            
+            
+            Game.Socket.on('assignQuest', function (data) {
+              $("#quest-container").show();
+              $("#user-quest").html(data.quest);
+            });
+
+            Game.Socket.on('updateBoard', function (data) {
+              Game.World = data.board;
+
+              Game.Update();
+            });
+
+          });
         },
 
         SetupEvents: function () {
@@ -72,7 +119,7 @@
           console.log('sending draw, x: ' + x + ', y: ' + y + ', type: ' + type);
 
           this.World[x][y] = type;
-          this.Socket.emit('draw', { x: x, y: y, type: type });
+          Game.Socket.emit('finishedMove', { x: x, y: y, type: type });
 
           this.Update();
         },
@@ -85,10 +132,48 @@
 
       $(function() {
         Game.Init();
+
+        $("#join-game").click(function () {
+    
+      var userName = document.getElementById('username');
+      Game.Socket.emit('join', { userName: userName.value });
+      $("#join-container").hide();
+      
+    });
+    
+    $("#start-game").click(function(){
+      Game.Socket.emit('startGame', { });
+    });
+    
+    $("#next").click(function(){
+      
+      $("#next").hide();
+    });
       });
     </script>
   </head>
   <body>
+    <div id="join-container">
+      <input type="text" id="username" placeholder="Username" /> 
+      <a href="javascript:void(0)" id="join-game">Join Game</a>
+      </div>
+    <br />
+    <br />
+
+    <a href="#" id="start-game">Start Game</a>
+    <a href="#" id="next" style="display:none">Next</a>
+
+    <div id="quest-container" style="display:none">
+    <h3>Your quest is to build as many <span id="user-quest"></span> as you can </h3>
+    </div>
+
+
+
+
+    <h3>Connected Players</h3>
+    <ul id="ul-players">
+    </ul>
+
     <ul id="elements">
       <li data-type="water">Water</li>
       <li data-type="stone">Stone</li>
