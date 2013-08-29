@@ -8,6 +8,7 @@ var fs = require('fs');
 // Start listening on port 8080
 server.listen(8080);
 
+
 // Serve the index.html file
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
@@ -16,6 +17,36 @@ app.get('/', function (req, res) {
 app.get('/grid.js', function (req, res) {
   res.sendfile(__dirname + '/grid.js');
 });
+
+
+app.get('/assets/sand.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/sand.png');
+});
+
+app.get('/assets/stone.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/stone.png');
+});
+
+app.get('/assets/flower.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/flower.png');
+});
+
+app.get('/assets/blank.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/blank.png');
+});
+
+app.get('/assets/fire.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/fire.png');
+});
+
+app.get('/assets/water.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/water.png');
+});
+
+app.get('/assets/grass.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/grass.png');
+});
+
 
 function LoadWorld() {
 
@@ -29,7 +60,6 @@ function LoadWorld() {
 });
 
 }
-
 
 var _connectedUsers = [];
 var _playingUsers = [];
@@ -70,7 +100,6 @@ function Init(client) {
 		client.disconnect();
 	}
 	else {
-
 		  io.sockets.socket(client.id).emit( "init", { usersOnline: _connectedUsers });
 	}
 }
@@ -144,7 +173,6 @@ function StartGame(client) {
 		_gameHasStarted = true;
 		console.log("Game has started", _gameHasStarted);
 		
-
 		_playingUsers = shuffle(_connectedUsers);
 		console.log(_playingUsers);
 		
@@ -210,51 +238,49 @@ function transformBoard(data)
     var tiles = _board;
 
     console.log("Tiles: ", tiles);
+
     //leta upp alla grannar
-    var left_neighbor = [draw_y, draw_x-1];
-    var right_neighbor = [draw_y, draw_x+1];
-    var top_neighbor = [draw_y-1, draw_x];
-    var bottom_neighbor = [draw_y+1, draw_x];
+    var left_neighbor = [draw_x-1, draw_y];
+    var right_neighbor = [draw_x+1, draw_y];
+    var top_neighbor = [draw_x, draw_y-1];
+    var bottom_neighbor = [draw_x, draw_y+1];
     
     var neighbors = [left_neighbor, right_neighbor, top_neighbor, bottom_neighbor];//array med grannarnas koordinater
-    console.log(neighbors);
+
     //kolla om någon ska ombildas
     //en ruta ska ombildas om den är ett grundämne
     var transformations = [];
     for (var i = 0; i < neighbors.length; i++) {
-
       n_x = neighbors[i][0];
       n_y = neighbors[i][1];
       
       if(tiles[n_x] && tiles[n_x][n_y])
       {
-        if(tiles[n_x][n_y] != "blank")//en granne som är blank ska aldrig påverkas
+        if(tiles[n_x][n_y] != "blank")
         {
-          console.log("new elementar: ", draw_element,  tiles[n_x][n_y]);
-          new_element = getNewElement(draw_element, tiles[n_x][n_y]);
-          if(new_element != draw_element && new_element !=  tiles[n_x][n_y] && transformations.indexOf(new_element) == -1)
+        new_element = getNewElement(draw_element, tiles[n_x][n_y]);
+        if(new_element != draw_element && transformations.indexOf(new_element) == -1)
             transformations.push(new_element);
-          tiles[n_x][n_y] = new_element;
+        tiles[n_x][n_y] = new_element;
         }
       }
     }
  
     console.log(transformations.length);
-    console.log(transformations);
     //kolla om aktuell ruta ska ombildas eller tömmas
     //vi behöver veta vilka ombildningar som skett:
     //1. inga
     if(transformations.length == 0)
     {
       console.log("ingen trans!!!!")
-      tiles[draw_y][draw_x] = draw_element;
+      tiles[draw_x][draw_y] = draw_element;
     }
     //2. av en sort
     if(transformations.length == 1)
-      tiles[draw_y][draw_x] = transformations[0];
+      tiles[draw_x][draw_y] = transformations[0];
     //3. av flera sorter
     if(transformations.length > 1)
-      tiles[draw_y][draw_x] = "blank";
+      tiles[draw_x][draw_y] = "blank";
 
     console.log(data);
 
@@ -273,7 +299,6 @@ function transformBoard(data)
 
 function getNewElement(draw_element, neighbor_element)
 {
-
   if(draw_element == "fire")
   {
     if(neighbor_element == "water")
@@ -282,8 +307,6 @@ function getNewElement(draw_element, neighbor_element)
       return "ashes";
     if(neighbor_element == "stone")
       return "lava";
-
-    return "fire";
   }
 
   if(draw_element == "water")
@@ -304,8 +327,6 @@ function getNewElement(draw_element, neighbor_element)
       return "ashes";
     if(neighbor_element == "stone")
       return "moss";
-
-    return "grass";
   }
 
   if(draw_element == "stone")
@@ -316,8 +337,6 @@ function getNewElement(draw_element, neighbor_element)
       return "moss";
     if(neighbor_element == "fire")
       return "lava";
-
-    return "stone";
   }
 
   return neighbor_element;
