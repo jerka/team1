@@ -1,0 +1,51 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect('http://localhost:8080');
+
+  // Called when client is connected to server
+  socket.on('connect', function () {
+
+    // Called when client receives message from server
+    socket.on('message', function (data) {
+      // Log to browser console
+      console.log(data);
+      // Add the message to the ul list
+      var li = document.createElement('li');
+      li.innerHTML = data.nick + " says: " + data.message;
+      document.getElementById('chat').appendChild(li);
+    });
+
+  });
+  
+  function send_message () {
+
+    var message = document.getElementById('message');
+    var nick = document.getElementById('nick');
+
+    // Simple validation
+    if (nick.value == '') {
+      alert('You must enter your nick!');
+      console.log('hej');
+      return false;
+    }
+
+    // Send the message to the server
+    socket.emit('message', { nick: nick.value, message: message.value });
+
+    // Clear the input
+    message.value = '';
+
+    return false;
+  }
+
+</script>
+
+<form onsubmit="return send_message();" action="">
+
+  <input type="text" id="nick" placeholder="Nickname" />
+  <input type="text" id="message" placeholder="Message" />
+  <input type="submit" value="Send" />
+
+</form>
+
+<ul id="chat"></ul>
