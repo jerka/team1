@@ -15,7 +15,14 @@ io.sockets.on('connection', function (client) {
   // Called when receving 'message' from the client
   client.on('message', function (data) {
     // Log data to the console
+
+    var x = data.x;
+    var y = data.y;
+    var type = data.type;
+
     console.log(data);
+
+    
     // Sends a message to all connected clients
     io.sockets.emit('message', data);
   });
