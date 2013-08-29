@@ -66,6 +66,18 @@
               $("#next").show();
               alert("Your turn");
             });
+            Game.Socket.on('gameOver', function (data) {
+              var users = data.users;
+            
+                for (var i = 0; i < users.length; i++) {
+                  var li = document.createElement('li');
+                  li.innerHTML = users[i].points + " - " + users[i].userName;
+                  document.getElementById('ul-highscore').appendChild(li);
+              
+          
+              
+              }
+            });
             Game.Socket.on('startGame', function (data) {
               $("#start-game").remove();
               alert("Game started");
@@ -168,6 +180,10 @@
     </div>
 
 
+    <div id="highscore-container">
+        <ul id="ul-highscore">
+        </ul>
+    </div>
 
 
     <h3>Connected Players</h3>

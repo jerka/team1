@@ -40,7 +40,7 @@ var _board = null;
 
 
 function GetUserObject(id, userName) {
-	return { id: id, userName: userName, quest: null };
+	return { id: id, userName: userName, quest: null, points: 0 };
 }
 
 
@@ -95,11 +95,32 @@ function FinishMove(client, data) {
       transformBoard(data);
 
 			io.sockets.emit('updateBoard', {board: _board });
-			 io.sockets.socket(_currentPlayer.id).emit("yourTurn",{message:'Your turn'});
+
+      if(isGameOver()) {
+        EndGame();
+      }
+      else {
+        io.sockets.socket(_currentPlayer.id).emit("yourTurn",{message:'Your turn'});
+      }
 		}
 		else {	
 			   io.sockets.socket(requestingUserId).emit("message",{message:'Wait for your turn'});
 		}
+}
+
+function EndGame() {
+  for(var i = 0; i < _playingUsers.length; i++) {
+
+      for(var x = 0; x < _board.length; x++) {
+        for(var y = 0; y < _board[x].length; y++) {
+          if(_board[x][y] == _playingUsers[i].quest) {
+              _playingUsers[i].points++;
+          }
+      }
+    }
+  }
+  //_playingUsers.sort()
+  io.sockets.emit('gameOver', { users: _playingUsers });
 }
 
 function UpdateQuests() {
@@ -290,6 +311,17 @@ function getNewElement(draw_element, neighbor_element)
 
   return neighbor_element;
 
+}
+
+function isGameOver() {
+  for(var x = 0; x < _board.length; x++) {
+    for(var y = 0; y < _board[x].length; y++) {
+      if(_board[x][y] == "blank")
+        return false;
+    }
+  }
+
+  return true;
 }
 		
 		
