@@ -202,7 +202,6 @@ io.sockets.on('connection', function (client) {
 function transformBoard(data)
 {
    
-<<<<<<< Updated upstream
     var draw_x = data.x
     var draw_y = data.y
     var draw_element = data.type;
@@ -211,19 +210,6 @@ function transformBoard(data)
     var tiles = _board;
 
     console.log("Tiles: ", tiles);
-=======
-    var draw_x = 0;//data.x
-    var draw_y = 1;//data.y
-    var draw_element = data.type;
-
-    //denna läses upp ur nåt på servern
-    var tiles = [
-    ['sand','sand','blank'],
-    ['blank','blank','blank'],
-    //['grass','fire','blank'],
-    ];
->>>>>>> Stashed changes
-
     //leta upp alla grannar
     var left_neighbor = [draw_y, draw_x-1];
     var right_neighbor = [draw_y, draw_x+1];
@@ -242,14 +228,6 @@ function transformBoard(data)
       
       if(tiles[n_x] && tiles[n_x][n_y])
       {
-<<<<<<< Updated upstream
-        if(tiles[n_x][n_y] != "blank")
-        {
-        new_element = getNewElement(draw_element, tiles[n_x][n_y]);
-        if(new_element != draw_element && transformations.indexOf(new_element) == -1)
-            transformations.push(new_element);
-        tiles[n_x][n_y] = new_element;
-=======
         if(tiles[n_x][n_y] != "blank")//en granne som är blank ska aldrig påverkas
         {
           console.log("new elementar: ", draw_element,  tiles[n_x][n_y]);
@@ -257,7 +235,6 @@ function transformBoard(data)
           if(new_element != draw_element && new_element !=  tiles[n_x][n_y] && transformations.indexOf(new_element) == -1)
             transformations.push(new_element);
           tiles[n_x][n_y] = new_element;
->>>>>>> Stashed changes
         }
       }
     }
@@ -347,7 +324,6 @@ function getNewElement(draw_element, neighbor_element)
 
 }
 
-<<<<<<< Updated upstream
 function isGameOver() {
   for(var x = 0; x < _board.length; x++) {
     for(var y = 0; y < _board[x].length; y++) {
@@ -360,7 +336,4 @@ function isGameOver() {
 }
 		
 		
-=======
-
->>>>>>> Stashed changes
 	
