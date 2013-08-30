@@ -1,6 +1,12 @@
 <html>
   <head>
     <style type="text/css">
+      body.night
+      {
+        color:white;
+        padding-top: 20px
+      }
+
       #container {
         margin: 0 auto;
         width: 1000px;
@@ -10,6 +16,20 @@
       h1, h3, h4 {
         text-align: center;
         font-family: Helvetica;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+      }
+
+      h4 {
+        margin-top: 0px;
+        padding-top: 0px;
+        margin-bottom: 0px;
+        padding-bottom: 6px;
+        color: #000 !important;
       }
 
       #join-container {
@@ -34,37 +54,69 @@
       #connected-players {
       }
 
+      #board-container {
+        display: none;
+      }
+
       #board {
         text-align: center;
       }
 
+      #ul-players {
+        font-family: Helvetica;
+        font-size: 14px;
+        padding-top: 0px;
+      }
+
       ul {
         padding: 0;
+        list-style-type: none;
       }
 
       #elements {
         background-color: #fff;
-        width: 320px;
-        margin: 0 auto;
+        padding: 5px;
       }
 
       #elements li {
         list-style-type: none;
-        display: table-cell;
-        border: 1px solid #ccc;
         width: 80px;
         height: 80px;
+        margin: 10px;
+        border: 1px solid #ccc;
       }
 
       table {
         background-color: #fff;
         margin: 0 auto;
+        padding: 10px;
       }
 
       td {
         border: 1px solid #ccc;
         width: 80px;
         height: 80px;
+        padding: 2px;
+      }
+
+      #dashboard {
+        position: fixed;
+        display: none;
+        top: 10%;
+        right: 0px;
+      }
+
+      #dashboard2 {
+        position: fixed;
+        display: none;
+        top: 10%;
+        left: 0px;
+        background-color: #fff;
+        padding: 15px; 
+      }
+
+      .yourTurn {
+        border: 10px solid yellow;
       }
     </style>
 
@@ -84,7 +136,8 @@
         Init: function () {
           console.log('init');
 
-          this.Socket = io.connect('http://isolabs.isotop.se:10119');
+          //this.Socket = io.connect('http://isolabs.isotop.se:10119');
+          this.Socket = io.connect('http://192.168.8.123:8080');
 
           this.Socket.on('connect', function () {
             Game.Socket.on('message', function (data) {
@@ -110,6 +163,7 @@
 
             Game.Socket.on('yourTurn', function (data) {
               $("#statusBar").effect("highlight", {}, 2000);
+              $("#grid table").addClass("yourTurn");
              
               console.log("Your turn, user: ", data);
 
@@ -129,15 +183,14 @@
             });
 
             Game.Socket.on('startGame', function (data) {
-              $("#start-game").remove();
+              $("#onstart").hide();
+              
+              $("#dashboard").show();
+              $("#dashboard2").show();
+              $("#board-container").show();
 
               Game.World = data.board;
               Game.Update();
-            });
-            
-            Game.Socket.on('assignQuest', function (data) {
-              $("#quest-container").show();
-              $("#user-quest").html(data.quest);
             });
 
             Game.Socket.on('updateBoard', function (data) {
@@ -149,11 +202,16 @@
             Game.Socket.on('currentPlayer', function (data) {
               if(data.currentPlayer.userName == username.value)
               {
-                $("#currentPlayer").html("<p>Its your turn to transform!</p>");
+                $("#grid table").addClass("yourTurn");
               }
               else{
-                 $("#currentPlayer").html("<p>It is player: "+data.currentPlayer.userName+"s turn</p>");
-  }
+                $("#grid table").removeClass("yourTurn");
+              }
+            });
+
+             Game.Socket.on('assignQuest', function (data) {
+              $("#quest-container").show();
+              $("#user-quest").html("<img src='/assets/"+data.quest+".png' />");
             });
           });
         },
@@ -205,6 +263,33 @@
       $(function() {
         Game.Init();
 
+        var mode = 0;
+
+        setInterval(
+          function(){
+
+              mode++;
+                if(mode % 2 == 0)
+                {
+                $("body").fadeIn('slow',
+                  function()
+                  {
+                   $(this).attr("style","background: #fff url('/assets/night_back.jpg') no-repeat fixed center;transition-property: background;transition-duration: 300ms;    transition-timing-function: ease-in;transition-delay: 100ms;").addClass('night');
+                  }
+                  );
+              }
+              else
+              {
+                                    $("body").fadeIn('slow',
+                  function()
+                  {
+                   $(this).attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center;transition-property: background;transition-duration: 300ms;    transition-timing-function: ease-in;transition-delay: 100ms;").removeClass('night');
+                  }
+                  );
+              }
+            }
+            ,60000);
+
         $("#join-game").click(function () {
           var userName = document.getElementById('username');
           Game.Socket.emit('join', { userName: userName.value });
@@ -234,24 +319,42 @@
     </script>
   </head>
   <body>
+    <div id="dashboard2">
+      <div id="quest-container">
+          <h4>Your quest:</h4>
+          <span id="user-quest"></span>
+        </div>
+    </div>
+
+    <div id="dashboard">
+      <ul id="elements">
+        <li data-type="water" style="background:url('./assets/Water.png')"></li>
+        <li data-type="stone" style="background:url('./assets/stone.png')"></li>
+        <li data-type="fire" style="background:url('./assets/Fire.png')"></li>
+        <li data-type="grass" style="background:url('./assets/grass.png')"></li>
+      </ul>
+    </div>
+
     <div id="container">
-      <h1>[Insert name]</h1>
-      <div id="join-container">
-        <input type="text" id="username" placeholder="Name" />
-        <button id="join-game">Join game</button>
+      <div id="onstart">
+        <h1>Elements of Isotopia</h1>
+
+        <div id="connected-players">
+          <h3>Connected Players</h3>
+          <ul id="ul-players"> </ul>
+        </div>
+
+        <div id="join-container">
+          <input type="text" id="username" placeholder="Name" />
+          <button id="join-game">Join game</button>
+          <br /><br />
+        </div>
+
+        <button id="start-game">Start game</button>
       </div>
-
-      <br /><br />
-
-      <button id="start-game">Start game</button>
-      
-      <br /><br />
 
       <div id="statusBar">
         <div id="currentPlayer"></div>
-        <div id="quest-container" style="display:none">
-          <h4>Your quest is to build as many <span id="user-quest"></span> as you can </h4>
-        </div>
       </div>
 
       <div id="highscore-container">
@@ -259,19 +362,7 @@
       </div>
 
       <div id="board-container">
-        <div id="connected-players">
-          <h3>Connected players</h3>
-          <ul id="ul-players"> </ul>
-        </div>
-
         <div id="board">
-          <ul id="elements">
-            <li data-type="water" style="background:url('./assets/Water.png')"></li>
-            <li data-type="stone" style="background:url('./assets/stone.png')"></li>
-            <li data-type="fire" style="background:url('./assets/Fire.png')"></li>
-            <li data-type="grass" style="background:url('./assets/grass.png')"></li>
-          </ul>
-
           <div id="grid">
             <table>
               <tbody></tbody>

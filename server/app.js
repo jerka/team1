@@ -6,7 +6,8 @@ var app = require('express')()
 var fs = require('fs');
 
 // Start listening on port 8080
-server.listen(10119);
+//server.listen(10119);
+server.listen(8080);
 
 
 // Serve the index.html file
@@ -469,6 +470,8 @@ function secondTransform(transformed_tiles, tiles)
     {
         if(neighbor_type == "lava")
           return "sandfiregoddemon";
+        if(neighbor_type == "steam")
+          return "sandstorm"
         return "smagga";
     }
 
@@ -476,8 +479,6 @@ function secondTransform(transformed_tiles, tiles)
     {
         if(neighbor_type == "sand")
           return "sandfiregoddemon";
-        if(neighbor_type == "steam")
-          return "sandstorm"
         return "smagga";
     }
 
