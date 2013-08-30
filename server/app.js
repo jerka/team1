@@ -581,12 +581,12 @@ function isGameOver() {
 function CreateBoard(numberOfPlayers) {
   console.log("creating board");
 
-  var rows = 3;
-  var cols = 3;
+  var rows = 2;
+  var cols = 2;
 
   if(numberOfPlayers == 3) {
-    rows = 9;
-    cols = 10;
+    rows = 5;
+    cols = 5;
   }
   else if(numberOfPlayers == 4) {
     rows = 4;

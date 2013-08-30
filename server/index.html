@@ -118,6 +118,16 @@
       .yourTurn {
         border: 10px solid yellow;
       }
+
+      #highscore-container {
+        display: none;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      #highscore-container h3 {
+        font-size: 30px;
+      }
     </style>
 
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
@@ -180,6 +190,11 @@
                 li.innerHTML = users[i].points + " - " + users[i].userName;
                 document.getElementById('ul-highscore').appendChild(li);
               }
+
+              $('#highscore-container').show();
+              $("#dashboard").hide();
+              $("#dashboard2").hide();
+              $("#board-container").hide();
             });
 
             Game.Socket.on('startGame', function (data) {
@@ -353,11 +368,8 @@
         <button id="start-game">Start game</button>
       </div>
 
-      <div id="statusBar">
-        <div id="currentPlayer"></div>
-      </div>
-
       <div id="highscore-container">
+        <h3>Highscore</h3>
         <ul id="ul-highscore"></ul>
       </div>
 
