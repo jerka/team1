@@ -1,8 +1,51 @@
 <html>
   <head>
     <style type="text/css">
+      #container {
+        margin: 0 auto;
+        width: 1000px;
+        text-align: center;
+      }
+
+      h1, h3, h4 {
+        text-align: center;
+        font-family: Helvetica;
+      }
+
+      #join-container {
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      #join-container input {
+        border: 1px solid #ccc;
+        font-size: 20px;
+        height: 40px;
+      }
+
+      button {
+        border: 1px solid #999;
+        font-size: 20px;
+        background-color: #iii;
+        height: 40px;
+        text-shadow: 0px 1px rgba(255, 255, 255, 0.8);
+      }
+
+      #connected-players {
+      }
+
+      #board {
+        text-align: center;
+      }
+
       ul {
         padding: 0;
+      }
+
+      #elements {
+        background-color: #fff;
+        width: 320px;
+        margin: 0 auto;
       }
 
       #elements li {
@@ -11,6 +54,11 @@
         border: 1px solid #ccc;
         width: 80px;
         height: 80px;
+      }
+
+      table {
+        background-color: #fff;
+        margin: 0 auto;
       }
 
       td {
@@ -67,7 +115,7 @@
 
               Game.User = data.user;
 
-              Game.Update();
+              Game.Update(true);
             });
 
             Game.Socket.on('gameOver', function (data) {
@@ -95,13 +143,13 @@
             Game.Socket.on('updateBoard', function (data) {
               Game.World = data.board;
 
-              Game.Update();
+              Game.Update(false);
             });
 
             Game.Socket.on('currentPlayer', function (data) {
               if(data.currentPlayer.userName == username.value)
               {
-                       $("#currentPlayer").html("<p>Its your turn to transform!</p>");
+                $("#currentPlayer").html("<p>Its your turn to transform!</p>");
               }
               else{
                  $("#currentPlayer").html("<p>It is player: "+data.currentPlayer.userName+"s turn</p>");
@@ -141,11 +189,15 @@
           this.World[x][y] = type;
           Game.Socket.emit('finishedMove', { x: x, y: y, type: type });
 
-          this.Update();
+          this.Update(false);
         },
 
-        Update: function () {
-          Grid.Render(this.World, this.User);
+        Update: function (showDisabledBlocks) {
+          if(showDisabledBlocks) 
+            Grid.Render(this.World, this.User);
+          else
+            Grid.Render(this.World);
+
           this.SetupEvents();
         }
       };
@@ -156,7 +208,8 @@
         $("#join-game").click(function () {
           var userName = document.getElementById('username');
           Game.Socket.emit('join', { userName: userName.value });
-          $("#join-container").hide();
+          $("#username").hide();
+          $("#join-game").hide();
         });
     
         $("#start-game").click(function(){
@@ -181,40 +234,51 @@
     </script>
   </head>
   <body>
-    <div id="join-container">
-      <input type="text" id="username" placeholder="Username" /> 
-      <a href="javascript:void(0)" id="join-game">Join Game</a>
-    </div>
-    
-    <br /><br />
-
-    <a href="#" id="start-game">Start Game</a>
-    <div id="statusBar">
-      <div id="currentPlayer"></div>
-      <div id="quest-container" style="display:none">
-        <h4>Your quest is to build as many <span id="user-quest"></span> as you can </h4>
+    <div id="container">
+      <h1>[Insert name]</h1>
+      <div id="join-container">
+        <input type="text" id="username" placeholder="Name" />
+        <button id="join-game">Join game</button>
       </div>
-    </div>
 
-    <div id="highscore-container">
-      <ul id="ul-highscore"></ul>
-    </div>
+      <br /><br />
 
+      <button id="start-game">Start game</button>
+      
+      <br /><br />
 
-    <h3>Connected Players</h3>
-    <ul id="ul-players"> </ul>
+      <div id="statusBar">
+        <div id="currentPlayer"></div>
+        <div id="quest-container" style="display:none">
+          <h4>Your quest is to build as many <span id="user-quest"></span> as you can </h4>
+        </div>
+      </div>
 
-    <ul id="elements">
-      <li data-type="water" style="background:url('./assets/Water.png')">Water</li>
-      <li data-type="stone" style="background:url('./assets/stone.png')">Stone</li>
-      <li data-type="fire" style="background:url('./assets/Fire.png')">Fire</li>
-      <li data-type="grass" style="background:url('./assets/grass.png')">Grass</li>
-    </ul>
+      <div id="highscore-container">
+        <ul id="ul-highscore"></ul>
+      </div>
 
-    <div id="grid">
-      <table>
-        <tbody></tbody>
-      </table>
+      <div id="board-container">
+        <div id="connected-players">
+          <h3>Connected Players</h3>
+          <ul id="ul-players"> </ul>
+        </div>
+
+        <div id="board">
+          <ul id="elements">
+            <li data-type="water" style="background:url('./assets/Water.png')"></li>
+            <li data-type="stone" style="background:url('./assets/stone.png')"></li>
+            <li data-type="fire" style="background:url('./assets/Fire.png')"></li>
+            <li data-type="grass" style="background:url('./assets/grass.png')"></li>
+          </ul>
+
+          <div id="grid">
+            <table>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

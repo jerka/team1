@@ -59,14 +59,36 @@ app.get('/assets/steam.png', function (req, res) {
     res.sendfile(__dirname + '/assets/steam.png');
 });
   
-
-  app.get('/assets/night_back.jpg', function (req, res) {
+app.get('/assets/night_back.jpg', function (req, res) {
   res.sendfile(__dirname + '/assets/night_back.jpg');
 });
 
 app.get('/assets/day_back.jpg', function (req, res) {
   res.sendfile(__dirname + '/assets/day_back.jpg');
 });
+
+
+app.get('/assets/strangeflower.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/awesomeflower.png');
+});
+
+app.get('/assets/sandfiregoddemon.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/firegoddemon.png');
+});
+
+app.get('/assets/mushroom.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/mushroom.png');
+});
+
+app.get('/assets/sandstorm.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/sandstorm.png');
+});
+
+app.get('/assets/fireflower.png', function (req, res) {
+  res.sendfile(__dirname + '/assets/fireflower.png');
+});
+
+
 
 
 function LoadWorld() {
@@ -84,7 +106,8 @@ function LoadWorld() {
 
 var _connectedUsers = [];
 var _playingUsers = [];
-var _quests = ["flowers", "ashes", "moss", "sand", "lava", "steam"];
+
+var _quests = ["sandfiregoddemon", "sandstorm", "fireflower", "strangeflower", "mushroom"];
 var _gameHasStarted = false;
 var _currentPlayer = null;
 var _board = null;
@@ -171,19 +194,19 @@ function EndGame() {
           }
       }
     }
-
- var sortable = [];
-    for(var u = 0; u<_playingUsers.length; u++)
-    {
-          var userPoints = _playingUsers[u].points;
-          sortable.push({userName:_playingUsers[u].userName,points:userPoints}
-          );
-
-    }
-    sortable.sort(function(a, b) {return a.points - b.points})
-    
-    io.sockets.emit('gameOver',{users:sortable});
   }
+
+  var sortable = [];
+  for(var u = 0; u<_playingUsers.length; u++)
+  {
+        var userPoints = _playingUsers[u].points;
+        sortable.push({userName:_playingUsers[u].userName,points:userPoints}
+        );
+
+  }
+  sortable.sort(function(a, b) {return a.points - b.points})
+  
+  io.sockets.emit('gameOver',{users:sortable.reverse()});
 }
 
 function UpdateQuests() {
@@ -282,6 +305,8 @@ function transformBoard(data)
     //kolla om någon ska ombildas
     //en ruta ska ombildas om den är ett grundämne
     var transformations = [];
+    var transformed_tiles = [];
+
     for (var i = 0; i < neighbors.length; i++) {
       n_x = neighbors[i][0];
       n_y = neighbors[i][1];
@@ -290,45 +315,210 @@ function transformBoard(data)
       {
         if(tiles[n_x][n_y] != "blank")//en granne som är blank ska aldrig påverkas
         {
-          console.log("new elementar: ", draw_element,  tiles[n_x][n_y]);
+          //console.log("new elementar: ", draw_element,  tiles[n_x][n_y]);
           new_element = getNewElement(draw_element, tiles[n_x][n_y]);
           if(new_element != draw_element && new_element !=  tiles[n_x][n_y] && transformations.indexOf(new_element) == -1)
             transformations.push(new_element);
+            
+            if(tiles[n_x][n_y] != new_element)
+              transformed_tiles.push([n_y, n_x]);
+
           tiles[n_x][n_y] = new_element;
+          // transformed_tiles.push([n_x, n_y]);//transformed_tiles är en array med koordinater till tiles som transformerats
+          
         }
       }
     }
+
  
-    console.log(transformations.length);
+    //console.log(transformations.length);
     //kolla om aktuell ruta ska ombildas eller tömmas
     //vi behöver veta vilka ombildningar som skett:
     //1. inga
     if(transformations.length == 0)
     {
-      console.log("ingen trans!!!!")
+    //  console.log("ingen trans!!!!")
       tiles[draw_x][draw_y] = draw_element;
     }
     //2. av en sort
     if(transformations.length == 1)
+    {
       tiles[draw_x][draw_y] = transformations[0];
+      transformed_tiles.push([draw_y, draw_x]);
+    }
     //3. av flera sorter
     if(transformations.length > 1)
       tiles[draw_x][draw_y] = "blank";
 
-    console.log(data);
+//    console.log(data);
 
     //debug fulskriven för 3*3-bräda
     for (var i = 0; i < tiles.length; i++) {
-      console.log(tiles[i][0] + " " + tiles[i][1] + " " + tiles[i][2]);
+    //  console.log(tiles[i][0] + " " + tiles[i][1] + " " + tiles[i][2]);
     }
     
     // Sends a message to all connected clients
     //io.sockets.emit('transformBoard', data);
 
-    console.log("After transform", tiles);
+    //console.log("After transform", tiles);
+
+    console.log("transformed_tiles: ", transformed_tiles);
+
+    //nu vill vi gå igenom alla transformerade tiles och se om de ska transformera några andra
+    if(transformed_tiles.length>0)
+      secondTransform(transformed_tiles, tiles);
 
     _board = tiles;
 }
+
+
+function secondTransform(transformed_tiles, tiles)
+{
+  //för varje transformerad tile vill vi hitta grannarna, och se om de ska transformeras en andra nivå
+  //samt transformera den transformerade tilen om den ska det (dvs om den entydigt kan transformeras, annars stannar den i sitt tillstånd)
+  //loopa igenom transformed_tiles, för varje ruta kolla grannar
+  console.log("i secondtransform: ", transformed_tiles.length);
+
+  var transformations_to_execute = [];
+
+  for (var i = 0; i < transformed_tiles.length; i++) {
+      //på radnivå
+     console.log("undersöker ruta: ", transformed_tiles[i]);
+
+      current_x = transformed_tiles[i][0];
+      current_y = transformed_tiles[i][1];
+      current_type = tiles[current_y][current_x];
+
+      //nu har vi plockat ut data för en transformerad
+      //nu vill vi kolla på grannarna
+      //leta upp alla grannar
+      var left_neighbor = [current_y, current_x-1];
+      var right_neighbor = [current_y, current_x+1];
+      var top_neighbor = [current_y-1, current_x];
+      var bottom_neighbor = [current_y+1, current_x];
+      
+      var neighbors = [left_neighbor, right_neighbor, top_neighbor, bottom_neighbor];//array med grannarnas koordinater
+
+       // console.log(neighbors);
+        //kolla om någon ska ombildas
+        //en ruta ska ombildas om den är ett grundämne
+        var transformations = [];
+
+        
+
+        for (var j = 0; j < neighbors.length; j++) {
+
+          n_x = neighbors[j][0];
+          n_y = neighbors[j][1];
+           
+          if(tiles[n_x] && tiles[n_x][n_y])//kolla att vi inte hamnat utanför brädan
+          {
+            console.log("neighbor of transformed: ", tiles[n_x][n_y]);
+            console.log("current: ", current_type);
+            
+            //vi skickar in current type och aktuell grannes type, och kör andranivåreglerna på dem
+            var new_second_level = getSecondLevelElement(current_type, tiles[n_x][n_y]);
+
+            if(new_second_level !=  tiles[n_x][n_y] && transformations.indexOf(new_second_level) == -1 && new_second_level != "smagga" && new_second_level != "dish")
+              transformations.push(new_second_level);
+            //obs både current och neighbor kan komma att ändras
+            console.log(new_second_level);
+            if(new_second_level != "smagga" && new_second_level != "dish")
+            {
+              console.log("pushar rutaz: ", n_y, n_x);
+              transformations_to_execute.push([n_y, n_x, new_second_level]);
+            }
+          }//if
+
+        }//for neighbors
+
+        //här vill vi även second levla current OM exakt en secondlevling skett
+          console.log("antal secondtransformationer: ", transformations.length, " ", transformations);
+          //1. inga
+          //if(transformations.length == 0)
+          //{
+            //tiles[draw_x][draw_y] = draw_element;
+          //}
+          //2. av en sort
+          if(transformations.length == 1)
+          {
+            //tiles[n_x][n_y] = transformations[0];
+            console.log("pushar ruta: ", current_x, current_y);
+            transformations_to_execute.push([current_x, current_y, transformations[0]]);
+          }
+          //3. av flera sorter
+          //if(transformations.length > 1)
+        //tiles[draw_x][draw_y] = "blank";
+    
+
+    }//for transformed
+    console.log("execute: ", transformations_to_execute);
+
+    for(var k = 0; k<transformations_to_execute.length; k++)
+    {
+      var tile_y = transformations_to_execute[k][0];
+      var tile_x = transformations_to_execute[k][1];
+      var new_tile_element = transformations_to_execute[k][2];
+      tiles[tile_x][tile_y] = new_tile_element;}
+    
+  }//secondtransform()
+
+  function getSecondLevelElement(current_type, neighbor_type)
+  {
+    if(current_type == "sand")
+    {
+        if(neighbor_type == "lava")
+          return "sandfiregoddemon";
+        return "smagga";
+    }
+
+    if(current_type == "lava")
+    {
+        if(neighbor_type == "sand")
+          return "sandfiregoddemon";
+        if(neighbor_type == "steam")
+          return "sandstorm"
+        return "smagga";
+    }
+
+    if(current_type == "ashes")
+    {
+        if(neighbor_type == "flowers")
+          return "fireflower";
+        return "smagga";
+    }
+
+    if(current_type == "flowers")
+    {
+        if(neighbor_type == "ashes")
+          return "fireflower";
+        if(neighbor_type == "moss")
+          return "strangeflower";
+        return "smagga";
+    }
+
+    if(current_type == "moss")
+    {
+        if(neighbor_type == "steam")
+          return "mushroom";
+        if(neighbor_type == "flowers")
+          return "strangeflower";
+        return "smagga";
+    }
+
+    if(current_type == "steam")
+    {
+        if(neighbor_type == "moss")
+          return "mushroom";
+        if(neighbor_type == "sand")
+          return "sandstorm";
+        return "smagga";
+    }
+
+    return "dish";
+
+  }
+
 
 function getNewElement(draw_element, neighbor_element)
 {
@@ -390,8 +580,8 @@ function isGameOver() {
 function CreateBoard(numberOfPlayers) {
   console.log("creating board");
 
-  var rows = 5;
-  var cols = 5;
+  var rows = 3;
+  var cols = 3;
 
   if(numberOfPlayers == 3) {
     rows = 9;

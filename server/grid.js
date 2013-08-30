@@ -72,9 +72,9 @@ var Grid =
                   }
 
                   if(isBlank)
-                    $(tr).append("<td class='blank'>"+obj.type+"</td>");
+                    $(tr).append("<td class='blank'></td>");
                   else
-                    $(tr).append("<td style='width:80px;height:80px;background:url(\"assets/"+obj.type+".png\");''>"+obj.type+"</td>");
+                    $(tr).append("<td style='width:80px;height:80px;background:url(\"assets/"+obj.type+".png\");''></td>");
              }
 
           }
