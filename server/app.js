@@ -133,6 +133,8 @@ function FinishMove(client, data) {
 		//Check that it is the correct player who clicked 
 		if(_currentPlayer.id == requestingUserId)
 		{
+      _currentPlayer.lastMove = data;
+
 			var currentIndex = _playingUsers.indexOf(_currentPlayer);
 			console.log("CurrentIndex", currentIndex);
 			if(currentIndex == _playingUsers.length - 1) {
@@ -141,8 +143,6 @@ function FinishMove(client, data) {
 			else {
 				_currentPlayer = _playingUsers[currentIndex+1];
 			}
-
-      _currentPlayer.lastMove = data;
 
       transformBoard(data);
 
@@ -153,6 +153,7 @@ function FinishMove(client, data) {
       }
       else {
         io.sockets.socket(_currentPlayer.id).emit("yourTurn", { user: _currentPlayer });
+        io.sockets.emit('currentPlayer', {currentPlayer : _currentPlayer});
       }
 		}
 		else {	
@@ -170,9 +171,19 @@ function EndGame() {
           }
       }
     }
+
+ var sortable = [];
+    for(var u = 0; u<_playingUsers.length; u++)
+    {
+          var userPoints = _playingUsers[u].points;
+          sortable.push({userName:_playingUsers[u].userName,points:userPoints}
+          );
+
+    }
+    sortable.sort(function(a, b) {return a.points - b.points})
+    
+    io.sockets.emit('gameOver',{users:sortable});
   }
-  //_playingUsers.sort()
-  io.sockets.emit('gameOver', { users: _playingUsers });
 }
 
 function UpdateQuests() {
@@ -207,6 +218,7 @@ function StartGame(client) {
 		
 		io.sockets.emit('startGame', {message: "Game started", board: _board});
 		io.sockets.socket(_currentPlayer.id).emit("yourTurn", { user: _currentPlayer });
+    io.sockets.emit('currentPlayer', {currentPlayer : _currentPlayer});
 	}
 }
 

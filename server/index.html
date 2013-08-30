@@ -59,16 +59,15 @@
                 }    
               }
             });
-            
+
             Game.Socket.on('yourTurn', function (data) {
+              $("#statusBar").effect("highlight", {}, 2000);
+             
               console.log("Your turn, user: ", data);
 
               Game.User = data.user;
 
               Game.Update();
-
-              $("#next").show();
-              alert("Your turn");
             });
 
             Game.Socket.on('gameOver', function (data) {
@@ -83,7 +82,6 @@
 
             Game.Socket.on('startGame', function (data) {
               $("#start-game").remove();
-              alert("Game started");
 
               Game.World = data.board;
               Game.Update();
@@ -98,6 +96,16 @@
               Game.World = data.board;
 
               Game.Update();
+            });
+
+            Game.Socket.on('currentPlayer', function (data) {
+              if(data.currentPlayer.userName == username.value)
+              {
+                       $("#currentPlayer").html("<p>Its your turn to transform!</p>");
+              }
+              else{
+                 $("#currentPlayer").html("<p>It is player: "+data.currentPlayer.userName+"s turn</p>");
+  }
             });
           });
         },
@@ -181,10 +189,11 @@
     <br /><br />
 
     <a href="#" id="start-game">Start Game</a>
-    <a href="#" id="next" style="display:none">Next</a>
-
-    <div id="quest-container" style="display:none">
-      <h3>Your quest is to build as many <span id="user-quest"></span> as you can </h3>
+    <div id="statusBar">
+      <div id="currentPlayer"></div>
+      <div id="quest-container" style="display:none">
+        <h4>Your quest is to build as many <span id="user-quest"></span> as you can </h4>
+      </div>
     </div>
 
     <div id="highscore-container">
