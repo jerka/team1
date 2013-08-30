@@ -84,7 +84,7 @@
         Init: function () {
           console.log('init');
 
-          this.Socket = io.connect('http://192.168.8.123:8080');
+          this.Socket = io.connect('http://isolabs.isotop.se:10119');
 
           this.Socket.on('connect', function () {
             Game.Socket.on('message', function (data) {
