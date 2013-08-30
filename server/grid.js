@@ -1,6 +1,11 @@
 
 var Grid = 
 {
+  SearchPattern: [{ x: 0, y: 0},
+                  { x: 0, y: -1},
+                  { x: 1, y: 0},
+                  { x: 0, y: 1},
+                  { x: -1, y: 0}],
   
   CreateTile : function(_x,_y,_type)
   { 
@@ -40,7 +45,7 @@ var Grid =
       }
    }
   return tilesToObjects;
-  },  Render: function(board)
+  },  Render: function(board, user)
   {
      $("#grid table tbody").html("");
     var t = this.ConvertArrayToTileObjects(board);
@@ -52,17 +57,26 @@ var Grid =
             for(var col=0; col<t[row].length;col++)
               {
                   var obj = t[row][col];
-                 
-                 if(obj.type == "blank")
+                  var isBlank = true;
+
+                  if(obj.type != "blank")
+                      isBlank = false;
+
+                  if(user != null && user.lastMove != null) {
+                    for(var i = 0; i < this.SearchPattern.length; i++) {
+                      var possibleMove = this.SearchPattern[i];
+
+                      if(user.lastMove.x + possibleMove.x == row && user.lastMove.y + possibleMove.y == col)
+                        isBlank = false;
+                    }
+                  }
+
+                  if(isBlank)
                     $(tr).append("<td class='blank'>"+obj.type+"</td>");
                   else
                     $(tr).append("<td style='width:80px;height:80px;background:url(\"assets/"+obj.type+".png\");''>"+obj.type+"</td>");
              }
 
           }
-  },
-
-
-
-
+  }
 };

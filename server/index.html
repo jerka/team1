@@ -31,14 +31,14 @@
       var Game = {
         Socket: null,
         World: null,
+        User: null,
 
         Init: function () {
           console.log('init');
 
-          this.Socket = io.connect('http://192.168.8.106:8080');
+          this.Socket = io.connect('http://192.168.8.123:8080');
 
           this.Socket.on('connect', function () {
-  
             Game.Socket.on('message', function (data) {
              alert(data.message);
             });
@@ -56,28 +56,31 @@
                   var li = document.createElement('li');
                   li.innerHTML = connectedUsers[i].userName;
                   document.getElementById('ul-players').appendChild(li);
-                }
-          
-              
+                }    
               }
             });
             
             Game.Socket.on('yourTurn', function (data) {
+              console.log("Your turn, user: ", data);
+
+              Game.User = data.user;
+
+              Game.Update();
+
               $("#next").show();
               alert("Your turn");
             });
+
             Game.Socket.on('gameOver', function (data) {
               var users = data.users;
             
-                for (var i = 0; i < users.length; i++) {
-                  var li = document.createElement('li');
-                  li.innerHTML = users[i].points + " - " + users[i].userName;
-                  document.getElementById('ul-highscore').appendChild(li);
-              
-          
-              
+              for (var i = 0; i < users.length; i++) {
+                var li = document.createElement('li');
+                li.innerHTML = users[i].points + " - " + users[i].userName;
+                document.getElementById('ul-highscore').appendChild(li);
               }
             });
+
             Game.Socket.on('startGame', function (data) {
               $("#start-game").remove();
               alert("Game started");
@@ -85,8 +88,6 @@
               Game.World = data.board;
               Game.Update();
             });
-            
-            
             
             Game.Socket.on('assignQuest', function (data) {
               $("#quest-container").show();
@@ -98,7 +99,6 @@
 
               Game.Update();
             });
-
           });
         },
 
@@ -137,7 +137,7 @@
         },
 
         Update: function () {
-          Grid.Render(this.World);
+          Grid.Render(this.World, this.User);
           this.SetupEvents();
         }
       };
@@ -146,31 +146,29 @@
         Game.Init();
 
         $("#join-game").click(function () {
+          var userName = document.getElementById('username');
+          Game.Socket.emit('join', { userName: userName.value });
+          $("#join-container").hide();
+        });
     
-      var userName = document.getElementById('username');
-      Game.Socket.emit('join', { userName: userName.value });
-      $("#join-container").hide();
-      
-    });
+        $("#start-game").click(function(){
+          Game.Socket.emit('startGame', { });
+        });
     
-    $("#start-game").click(function(){
-      Game.Socket.emit('startGame', { });
-    });
-    
-    $("#next").click(function(){
-      
-      $("#next").hide();
-    });
+        $("#next").click(function(){
+          $("#next").hide();
+        });
 
-      var currentHours = new Date().getHours();
+        var currentHours = new Date().getHours();
 
-  console.log(currentHours < 07 && currentHours > 18);
-  if(currentHours < 07 || currentHours > 18) {
-    $("body").attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center; ");
-  }
-  else {
-    $("body").attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center; ");
-  }
+        console.log(currentHours < 07 && currentHours > 18);
+  
+        if(currentHours < 07 || currentHours > 18) {
+          $("body").attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center; ");
+        }
+        else {
+          $("body").attr("style","background: #fff url('/assets/day_back.jpg') no-repeat fixed center; ");
+        }
       });
     </script>
   </head>
@@ -178,27 +176,24 @@
     <div id="join-container">
       <input type="text" id="username" placeholder="Username" /> 
       <a href="javascript:void(0)" id="join-game">Join Game</a>
-      </div>
-    <br />
-    <br />
+    </div>
+    
+    <br /><br />
 
     <a href="#" id="start-game">Start Game</a>
     <a href="#" id="next" style="display:none">Next</a>
 
     <div id="quest-container" style="display:none">
-    <h3>Your quest is to build as many <span id="user-quest"></span> as you can </h3>
+      <h3>Your quest is to build as many <span id="user-quest"></span> as you can </h3>
     </div>
 
-
     <div id="highscore-container">
-        <ul id="ul-highscore">
-        </ul>
+      <ul id="ul-highscore"></ul>
     </div>
 
 
     <h3>Connected Players</h3>
-    <ul id="ul-players"> 
-    </ul>
+    <ul id="ul-players"> </ul>
 
     <ul id="elements">
       <li data-type="water" style="background:url('./assets/Water.png')">Water</li>

@@ -91,7 +91,7 @@ var _board = null;
 
 
 function GetUserObject(id, userName) {
-	return { id: id, userName: userName, quest: null, points: 0 };
+	return { id: id, userName: userName, quest: null, points: 0, lastMove: null };
 }
 
 
@@ -141,7 +141,8 @@ function FinishMove(client, data) {
 			else {
 				_currentPlayer = _playingUsers[currentIndex+1];
 			}
-			//Todo: Uppdatera spelbärdan här
+
+      _currentPlayer.lastMove = data;
 
       transformBoard(data);
 
@@ -151,7 +152,7 @@ function FinishMove(client, data) {
         EndGame();
       }
       else {
-        io.sockets.socket(_currentPlayer.id).emit("yourTurn",{message:'Your turn'});
+        io.sockets.socket(_currentPlayer.id).emit("yourTurn", { user: _currentPlayer });
       }
 		}
 		else {	
@@ -205,7 +206,7 @@ function StartGame(client) {
 		UpdateQuests();
 		
 		io.sockets.emit('startGame', {message: "Game started", board: _board});
-		io.sockets.socket(_currentPlayer.id).emit("yourTurn",{message:'Your turn'});
+		io.sockets.socket(_currentPlayer.id).emit("yourTurn", { user: _currentPlayer });
 	}
 }
 
